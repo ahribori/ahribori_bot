@@ -11,12 +11,25 @@ export default class Connector {
             browser = 'chrome';
         }
 
-        seleniumDrivers.init({
-            browserName: browser,
-            download: true
-        });
-
-        const driver = new webDriver.Builder().forBrowser(browser).build();
-        return driver;
+		/**
+		 * 셀레늄 드라이버 초기화,
+		 * 드라이버가 없다면 다운로드, 설치 후 driver resolve.
+		 */
+		return new Promise((resolve, reject) => {
+			seleniumDrivers.init({
+				browserName: browser,
+				download: true
+			}).then(() => {
+        		const driver = new webDriver.Builder().forBrowser(browser).build();
+				driver.then(() => {
+					resolve(driver);
+				}).catch(err => {
+					reject(err);
+				});
+			}).catch(err => {
+				reject(err);
+			}) ;
+		});
+		
     }
 }

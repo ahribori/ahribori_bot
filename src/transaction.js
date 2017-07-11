@@ -44,8 +44,6 @@ export default class Transaction {
              * 핸들링
              */
             getDriver().then(async () => {
-
-
                 const actions = this.getActions();
 
                 for (let i = 0; i < actions.length; i++) {
