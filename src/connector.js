@@ -28,7 +28,7 @@ export default class Connector {
 				});
 			}).catch(err => {
 				reject(err);
-			}) ;
+			});
 		});
 		
     }
