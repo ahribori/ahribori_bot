@@ -45,7 +45,6 @@ export default class Transaction {
              */
             getDriver().then(async () => {
                 const actions = this.getActions();
-
                 for (let i = 0; i < actions.length; i++) {
                     if (actions[i] instanceof Action === false) {
                         console.log("Actions이 아닙니다.");
@@ -91,6 +90,14 @@ export default class Transaction {
                             console.log('======================================================');
                             break;
                         default:
+							if (typeof action.type === 'function') {
+								const customAction = action.type;
+								try {
+									await customAction(this.driver, By);
+								} catch (e) {
+									console.log(e);
+								}
+							}
                     }
 
                 }
