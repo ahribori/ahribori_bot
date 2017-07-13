@@ -11,4 +11,6 @@ export default {
 
     port: process.env.SELENIUM_PORT || 4444,
 
+	services: ['phantomjs']
+
 }

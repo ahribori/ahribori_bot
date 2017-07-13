@@ -40,7 +40,8 @@ export default class Transaction {
             if (browserType !== 'chrome' &&
                 browserType !== 'internet explorer' &&
                 browserType !== 'firefox' &&
-                browserType !== 'safari') {
+                browserType !== 'safari' &&
+                browserType !== 'phantomjs') {
                 browserType = 'chrome';
             }
 
