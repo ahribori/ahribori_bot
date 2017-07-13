@@ -1,4 +1,5 @@
 import '../conf';
+
 export default class Action {
 
     /**
@@ -82,7 +83,7 @@ export default class Action {
                         try {
                             await customAction(browser);
                         } catch (e) {
-                            console.log(e);
+                            throw e;
                         }
                     }
             }

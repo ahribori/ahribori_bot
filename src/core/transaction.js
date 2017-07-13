@@ -1,4 +1,5 @@
 import '../conf';
+import logger from 'winston';
 import _ from 'lodash';
 import Action from './action';
 const wdio = require('webdriverio');
@@ -69,6 +70,7 @@ export default class Transaction {
                     resolve();
                 } catch (e) {
                     await browser.end();
+                    logger.error(e.message);
                     reject(e);
                 }
             }(browser));
