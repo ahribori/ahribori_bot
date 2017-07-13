@@ -7,7 +7,9 @@
     "start": "node_modules/.bin/cross-env NODE_ENV=production node ./build/app.js",
     "boot": "node_modules/.bin/cross-env NODE_ENV=production babel-node ./build/app.js",
     "dev": "node_modules/.bin/cross-env NODE_ENV=development node_modules/.bin/nodemon --exec babel-node src/app.js --watch src",
-    "build": "node_modules/.bin/cross-env NODE_ENV=production babel src --out-dir build"
+    "build": "node_modules/.bin/cross-env NODE_ENV=production babel src --out-dir build",
+    "selenium:install": "npm i -g selenium-standalone && selenium-standalone install",
+    "selenium": "selenium-standalone start"
   },
   "author": "",
   "license": "ISC",
@@ -19,9 +21,10 @@
     "nodemon": "^1.11.0"
   },
   "dependencies": {
+    "dotenv": "^4.0.0",
     "lodash": "^4.17.4",
-    "selenium-drivers": "^2.1.0",
-    "selenium-webdriver": "^3.4.0"
+    "webdriverio": "^4.8.0",
+    "winston": "^2.3.1"
   },
   "babel": {
     "env": {
