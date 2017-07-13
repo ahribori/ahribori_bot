@@ -1,4 +1,6 @@
 import '../conf';
+import appPath from '../conf/path';
+import path from 'path';
 
 export default class Action {
 
@@ -71,6 +73,10 @@ export default class Action {
                         }, action.param1);
                     });
                     break;
+
+				case 'screenshot':
+					await browser.saveScreenshot(path.resolve(appPath.SCREENSHOT_PATH, `${Date.now()}.png`));
+					break;
 
                 /**
                  *  action.type이 function이면,

@@ -1,16 +1,19 @@
 require('dotenv').config();
 import winston from 'winston';
+import path from 'path';
+import appPath from './path';
+
 winston.configure({
     transports: [
         new (winston.transports.Console)(),
         new (winston.transports.File)({
             name: 'all-file',
-            filename: 'all.log',
+            filename: path.resolve(appPath.LOG_PATH, 'all.log'),
             level: 'info',
         }),
         new (winston.transports.File)({
             name: 'error-file',
-            filename: 'error.log',
+            filename: path.resolve(appPath.LOG_PATH, 'error.log'),
             level: 'error'
         })
     ]
