@@ -78,7 +78,7 @@ export default class Action {
                  *  외부에서 직접 browser 객체를 핸들링 할 수 있음.
                  */
                 default:
-                    if (typeof action.type === 'function') {
+                    if (action.type === 'custom' && typeof action.param1 === 'function') {
                         const customAction = action.type;
                         try {
                             await customAction(browser);
