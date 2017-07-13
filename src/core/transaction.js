@@ -1,4 +1,5 @@
 import '../conf';
+import seleniumConf from '../conf/selenium';
 import logger from 'winston';
 import _ from 'lodash';
 import Action from './action';
@@ -43,13 +44,9 @@ export default class Transaction {
                 browserType = 'chrome';
             }
 
-            const options = {
-                desiredCapabilities: {
-                    browserName: browserType
-                }
-            };
+            seleniumConf.desiredCapabilities.browserName = browserType;
 
-            const browser = wdio.remote(options);
+            const browser = wdio.remote(seleniumConf);
 
             const actions = this.getActions();
 

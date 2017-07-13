@@ -4,6 +4,7 @@
   "description": "ahribori's application performance management & crawling & web test tool.",
   "main": "app.js",
   "scripts": {
+    "test": "node_modules/.bin/cross-env NODE_ENV=development node_modules/.bin/nodemon --exec babel-node src/test/index.js --watch src",
     "start": "node_modules/.bin/cross-env NODE_ENV=production node ./build/app.js",
     "boot": "node_modules/.bin/cross-env NODE_ENV=production babel-node ./build/app.js",
     "dev": "node_modules/.bin/cross-env NODE_ENV=development node_modules/.bin/nodemon --exec babel-node src/app.js --watch src",
@@ -16,13 +17,20 @@
   "devDependencies": {
     "babel-cli": "^6.24.1",
     "babel-plugin-transform-async-to-generator": "^6.24.1",
+    "babel-preset-babili": "^0.1.4",
     "babel-preset-env": "^1.6.0",
     "cross-env": "^5.0.1",
     "nodemon": "^1.11.0"
   },
   "dependencies": {
+    "body-parser": "^1.17.2",
     "dotenv": "^4.0.0",
+    "express": "^4.15.3",
+    "figlet": "^1.2.0",
     "lodash": "^4.17.4",
+    "mongoose": "^4.11.1",
+    "morgan": "^1.8.2",
+    "node-schedule": "^1.2.3",
     "webdriverio": "^4.8.0",
     "winston": "^2.3.1"
   },
@@ -41,7 +49,8 @@
           "transform-async-to-generator"
         ],
         "presets": [
-          "env"
+          "env",
+          "babili"
         ]
       }
     }

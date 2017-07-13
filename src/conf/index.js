@@ -2,6 +2,7 @@ require('dotenv').config();
 import winston from 'winston';
 winston.configure({
     transports: [
+        new (winston.transports.Console)(),
         new (winston.transports.File)({
             name: 'all-file',
             filename: 'all.log',
