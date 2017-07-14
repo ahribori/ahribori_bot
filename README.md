@@ -55,15 +55,44 @@ import Manager from '../core/manager';
 const manager = new Manager();
 import {Action, Transaction} from '../core'
 
-manager.addTransaction(new Transaction([
-	Action.createAction('navigate', 'http://naver.com'),
-	Action.createAction('screenshot'),
-	Action.createAction('navigate', 'http://daum.net'),
-	Action.createAction('screenshot'),
-	Action.createAction('navigate', 'https://www.google.co.kr/'),
-	Action.createAction('screenshot'),
-	Action.createAction('wait', 1000)
-]), 'chrome');
+/**
+* naver, daum, google을 순차적으로 탐색
+*/
+const TEST_CASE_01 = new Transaction([
+    Action.navigate('http://naver.com'),
+    Action.navigate('http://daum.net'),
+    Action.navigate('https://google.co.kr'),
+]);
+
+/**
+* naver, daum, google을 순차적으로 탐색하며, 스크린샷을 남김
+*/
+const TEST_CASE_02 = new Transaction([
+    Action.navigate('http://naver.com'),
+    Action.screenshot(),
+    Action.navigate('http://daum.net'),
+    Action.screenshot(),
+    Action.navigate('https://google.co.kr'),
+    Action.screenshot(),
+]);
+
+/**
+* naver에 접속하여 검색창에 'ahribori'라는 문자열을 입력한 뒤,
+* 검색 버튼을 누르고 3초 기다림
+*/
+const TEST_CASE_03 = new Transaction([
+    Action.navigate('http://naver.com'),
+    Action.setValue('#query', 'ahribori'),
+    Action.click('#search_btn'),
+    Action.wait(3000)
+]);
+
+/**
+* 트랜잭션 큐에 트랜잭션들을 등록
+*/
+manager.addTransaction(TEST_CASE_01);
+manager.addTransaction(TEST_CASE_02);
+manager.addTransaction(TEST_CASE_03);
 ```
 
 >1. ```npm run test```
