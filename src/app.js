@@ -2,6 +2,7 @@
  Load dependencies
  ============================================*/
 import './conf';
+import appPath from './conf/path'
 import express from 'express';
 import morgan from 'morgan';
 import bodyParser from 'body-parser';
@@ -20,7 +21,7 @@ app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
 
 // access log setting
-const accessLogStream = fs.createWriteStream(path.join(process.cwd(), 'access.log'), {flags: 'a'});
+const accessLogStream = fs.createWriteStream(path.join(appPath.LOG_PATH, 'access.log'), {flags: 'a'});
 app.use(morgan('combined', {stream: accessLogStream}));
 app.use(morgan('dev'));
 
