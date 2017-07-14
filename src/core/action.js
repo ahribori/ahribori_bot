@@ -1,25 +1,50 @@
 import '../conf';
 import appPath from '../conf/path';
 import path from 'path';
+import * as actionTypes from './actionTypes';
 
 export default class Action {
 
-    /**
-     *
-     * @param {string} type 브라우저가 수행할 행동을 정의한 액션 타입
-     * @param {string} param* 브라우저의 행동에 필요한 값들을 동적 인자로 받음
-     * @returns {{type: object}} Action 객체
-     */
-    static createAction(type) {
-        const action = { type };
-        for (let index in arguments) {
-            if (arguments.hasOwnProperty(index)){
-                if (index > 0) {
-                    action[`param${index}`] = arguments[index];
-                }
-            }
+    static navigate(url) {
+        return {
+            type: actionTypes.NAVIGATE,
+            url
         }
-        return action;
+    }
+
+    static setValue(selector, value) {
+        return {
+            type: actionTypes.SET_VALUE,
+            selector,
+            value
+        }
+    }
+
+    static click(selector) {
+        return {
+            type: actionTypes.CLICK,
+            selector
+        }
+    }
+
+    static wait(milliseconds) {
+        return {
+            type: actionTypes.WAIT,
+            milliseconds
+        }
+    }
+
+    static screenshot() {
+        return {
+            type: actionTypes.SCREENSHOT
+        }
+    }
+
+    static custom(callback) {
+        return {
+            type: actionTypes.CUSTOM,
+            callback
+        }
     }
 
     /**
@@ -38,8 +63,8 @@ export default class Action {
                  *
                  * param1: url
                  */
-                case 'navigate':
-                    await browser.url(action.param1);
+                case actionTypes.NAVIGATE:
+                    await browser.url(action.url);
                     break;
 
                 /**
@@ -48,8 +73,8 @@ export default class Action {
                  * param1: selector
                  * param2: value
                  */
-                case 'setValue':
-                    await browser.setValue(action.param1, action.param2);
+                case actionTypes.SET_VALUE:
+                    await browser.setValue(action.selector, action.value);
                     break;
 
                 /**
@@ -57,8 +82,8 @@ export default class Action {
                  *
                  * param1: selector
                  */
-                case 'click':
-                    await browser.click(action.param1);
+                case actionTypes.CLICK:
+                    await browser.click(action.selector);
                     break;
 
                 /**
@@ -66,15 +91,15 @@ export default class Action {
                  *
                  * param1: ms
                  */
-                case 'wait':
+                case actionTypes.WAIT:
                     await new Promise(r => {
                         setTimeout(() => {
                             r();
-                        }, action.param1);
+                        }, action.milliseconds);
                     });
                     break;
 
-				case 'screenshot':
+				case actionTypes.SCREENSHOT:
 					await browser.saveScreenshot(path.resolve(appPath.SCREENSHOT_PATH, `${Date.now()}.png`));
 					break;
 
@@ -84,10 +109,9 @@ export default class Action {
                  *  외부에서 직접 browser 객체를 핸들링 할 수 있음.
                  */
                 default:
-                    if (action.type === 'custom' && typeof action.param1 === 'function') {
-                        const customAction = action.type;
+                    if (action.type === actionTypes.CUSTOM && typeof action.callback === 'function') {
                         try {
-                            await customAction(browser);
+                            await callback(browser);
                         } catch (e) {
                             throw e;
                         }
