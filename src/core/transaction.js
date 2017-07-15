@@ -1,6 +1,5 @@
-import '../conf';
 import seleniumConf from '../conf/selenium';
-import logger from 'winston';
+import log from '../conf/logger';
 import _ from 'lodash';
 import Action from './action';
 const wdio = require('webdriverio');
@@ -68,7 +67,7 @@ export default class Transaction {
                     resolve();
                 } catch (e) {
                     await browser.end();
-                    logger.error(e.message);
+                    log('error', 'SELENIUM_ERROR', e.message);
                     reject(e);
                 }
             }(browser));

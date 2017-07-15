@@ -18,8 +18,6 @@ winston.configure({
 	]
 });
 
-export default {
-	log: (severity, eventType, message) => {
-		winston.log(severity, message, { event: eventType });
-	}
+export default (severity, eventType, message) => {
+	winston.log(severity, message, { event: eventType });
 };

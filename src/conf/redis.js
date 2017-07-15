@@ -1,6 +1,6 @@
 import '../conf';
 import redis from 'redis';
-import logger from '../conf/logger';
+import log from '../conf/logger';
 
 const REDIS_HOST = process.env.REDIS_HOST || '127.0.0.1';
 const REDIS_PORT = process.env.REDIS_PORT || 6379;
@@ -13,7 +13,7 @@ const client = redis.createClient({
 });
 
 client.on('ready', () => {
-	logger.log('info', 'REDIS_READY', `Redis connection established : ${REDIS_HOST}:${REDIS_PORT}`);
+	log('info', 'REDIS_READY', `Redis connection established : ${REDIS_HOST}:${REDIS_PORT}`);
 });
 
 client.on('connect', () => {
@@ -26,7 +26,7 @@ client.on('end', () => {
 });
 
 client.on('error', (err) => {
-	logger.log('error', 'REDIS_ERROR', err.message);
+	log('error', 'REDIS_ERROR', err.message);
 });
 
 client.on('warning', () => {
