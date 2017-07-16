@@ -104,8 +104,8 @@ export default class Manager {
                 transaction.run(this.agent, browser).then(() => {
                     this.liveSession --;
                     event.emit('finish', transaction, browser);
-                }).catch((err) => {
-					logger.log('error', err.message, { event: 'TRANSACTION_RUNTIME_ERROR' });
+                }).catch(err => {
+					// transaction.run 에서 로깅함
 				});
             } else {
                 log('TRANSACTION_QUEUE_FULL', null, this.liveSession, this.transactionQueue.length);

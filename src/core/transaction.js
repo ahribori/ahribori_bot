@@ -36,7 +36,7 @@ export default class Transaction {
     run(agent, browserType) {
         return new Promise((resolve, reject) => {
         	if (!agent) {
-				reject(new Error('Agent is undefined.'));
+				log('error', 'TRANSACTION_RUNTIME_ERROR', 'Agent is undefined.');
 			}
 
             if (browserType !== 'chrome' &&
