@@ -32,4 +32,14 @@ client.on('error', (err) => {
 client.on('warning', () => {
 });
 
+if (process.env.NODE_ENV === 'development' && process.env.REDIS_CONSOLE_LOG === 'true') {
+	client.monitor((err, res) => {
+		console.log('Entering Redis monitoring mode.');
+	});
+
+	client.on('monitor', function (time, args, raw_reply) {
+		console.log(`[REDIS] ${args}`);
+	});
+}
+
 export default client;
