@@ -1,4 +1,3 @@
-import seleniumConf from '../conf/selenium';
 import log from '../conf/logger';
 import _ from 'lodash';
 import Action from './action';
@@ -30,11 +29,15 @@ export default class Transaction {
      * chrome, firefox 등의 브라우저 종류를 인자로 받아
      * 셀레늄 드라이버와 바인딩하고 생성자에서 받은 액션들을
      * 순차적으로 실행
+     * @param agent
      * @param browserType
      * @returns {Promise}
      */
-    run(browserType) {
+    run(agent, browserType) {
         return new Promise((resolve, reject) => {
+        	if (!agent) {
+				log('error', 'TRANSACTION_RUNTIME_ERROR', 'Agent is undefined. You must pass an Agent object as an argument when calling the Manager constructor.');
+			}
 
             if (browserType !== 'chrome' &&
                 browserType !== 'internet explorer' &&
@@ -43,10 +46,18 @@ export default class Transaction {
                 browserType !== 'phantomjs') {
                 browserType = 'chrome';
             }
+            
+            const seleniumOptions = {
+				desiredCapabilities: {
+					browserName: browserType
+				},
+				protocol: agent.protocol || process.env.SELENIUM_PROTOCOL || 'http',
+				host: agent.host || process.env.SELENIUM_HOST || '127.0.0.1',
+				port: agent.port || process.env.SELENIUM_PORT || 4444,
+				services: ['phantomjs']
+			};
 
-            seleniumConf.desiredCapabilities.browserName = browserType;
-
-            const browser = wdio.remote(seleniumConf);
+            const browser = wdio.remote(seleniumOptions);
 
             const actions = this.getActions();
 
