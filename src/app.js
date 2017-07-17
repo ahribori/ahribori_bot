@@ -19,12 +19,12 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // parse JSON and url-encoded query
-app.use(bodyParser.urlencoded({extended: false}));
+app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 // access log setting
-const accessLogStream = fs.createWriteStream(path.join(appPath.LOG_PATH, 'access.log'), {flags: 'a'});
-app.use(morgan('combined', {stream: accessLogStream}));
+const accessLogStream = fs.createWriteStream(path.join(appPath.LOG_PATH, 'access.log'), { flags: 'a' });
+app.use(morgan('combined', { stream: accessLogStream }));
 app.use(morgan('dev'));
 
 // open the server
@@ -54,7 +54,7 @@ mongoose.connect(MONGO_URI, { useMongoClient: true });
 const db = mongoose.connection;
 mongoose.Promise = global.Promise;
 db.on('error', console.error);
-db.once('open', ()=> {
+db.once('open', () => {
     console.log('connected to mongodb server =>', MONGO_URI);
 });
 
