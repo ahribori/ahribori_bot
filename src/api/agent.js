@@ -22,7 +22,9 @@ router.get('/:id', async (req, res) => {
 
 router.post('/', async (req, res) => {
     const { name, protocol, host, port } = req.body;
-    if (!name) { return onError(res, new Error('name required'), 400); }
+    if (!name) {
+        return onError(res, new Error('name required'), 400);
+    }
     if (protocol && (protocol !== 'http' && protocol !== 'https')) {
         return onError(res, new Error('invalid protocol'), 400);
     }
@@ -49,7 +51,7 @@ router.put('/:id', async (req, res) => {
     if (name) {
         willUpdate['name'] = name;
     }
-    if (protocol)  {
+    if (protocol) {
         if (protocol && (protocol !== 'http' && protocol !== 'https')) {
             return onError(res, new Error('invalid protocol'), 400);
         }
@@ -64,7 +66,6 @@ router.put('/:id', async (req, res) => {
         }
         willUpdate['port'] = port;
     }
-
     willUpdate['mod_date'] = Date.now();
 
     try {
@@ -78,7 +79,7 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
     try {
         res.json(await Agent.remove({ _id: req.params.id }));
-    } catch(e) {
+    } catch (e) {
         return onError(res, e);
     }
 });

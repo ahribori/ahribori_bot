@@ -99,9 +99,9 @@ export default class Action {
                     });
                     break;
 
-				case actionTypes.SCREENSHOT:
-					await browser.saveScreenshot(path.resolve(appPath.SCREENSHOT_PATH, `${Date.now()}.png`));
-					break;
+                case actionTypes.SCREENSHOT:
+                    await browser.saveScreenshot(path.resolve(appPath.SCREENSHOT_PATH, `${Date.now()}.png`));
+                    break;
 
                 /**
                  *  action.type이 function이면,
