@@ -9,6 +9,8 @@ import bodyParser from 'body-parser';
 import mongoose from 'mongoose';
 import path from 'path';
 import fs from 'fs';
+import figlet from 'figlet';
+import api from './api';
 
 /* =========================================
  Express Configuration
@@ -27,16 +29,21 @@ app.use(morgan('dev'));
 
 // open the server
 app.listen(port, () => {
-    console.log(`Express is running on port => ${port}`)
+    figlet('Ahribori Bot', (err, logo) => {
+        console.log(logo);
+        console.log(`Listening on port ${port}...`);
+    })
 });
+
+// set api router
+app.use('/', api);
 
 // set public path
 app.use('/', express.static(path.join(__dirname, './../public')));
 
 /* handle error */
 app.use(function (err, req, res, next) {
-    console.error(err.stack);
-    res.status(500).send('Something broke!');
+    res.status(err.status || 500).send('Something broke!');
 });
 
 /* =========================================
