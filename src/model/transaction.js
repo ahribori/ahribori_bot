@@ -3,7 +3,7 @@ const Schema = mongoose.Schema;
 
 const Transaction = new Schema({
 	name: { type: String },
-	actions: [{ type: Object }],
+	actions: [{ type: Schema.Types.Mixed }],
 	reg_date: { type: Date, default: Date.now },
 	mod_date: {type: Date, default: Date.now}
 });
