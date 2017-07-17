@@ -2,6 +2,7 @@ import express from 'express';
 const router = express.Router();
 import { Transaction } from '../model';
 import onError from './onError';
+import * as actionTypes from '../core/actionTypes';
 
 router.get('/', async (req, res) => {
     try {
@@ -29,6 +30,13 @@ router.post('/', async (req, res) => {
         return onError(res, new Error('action must be of type array'), 400);
     }
 
+    for (let i = 0; i < actions.length; i++) {
+        const actionType = actions[i].type.toUpperCase();
+        if (!actionTypes[actionType]) {
+            return onError(res, new Error(`'${actions[i].type}'is invalid action type`), 400);
+        }
+    }
+
     try {
         res.json(await Transaction({
             name,
@@ -48,6 +56,12 @@ router.put('/:id', async (req, res) => {
     if (actions) {
         if (!Array.isArray(actions)) {
             return onError(res, new Error('action must be of type array'), 400);
+        }
+        for (let i = 0; i < actions.length; i++) {
+            const actionType = actions[i].type.toUpperCase();
+            if (!actionTypes[actionType]) {
+                return onError(res, new Error(`'${actions[i].type}'is invalid action type`), 400);
+            }
         }
         willUpdate['actions'] = actions;
     }
