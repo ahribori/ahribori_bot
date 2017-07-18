@@ -56,7 +56,7 @@ export default class Action {
      */
     static async runAction(action, browser) {
         await (async function (browser) {
-            switch (action.type) {
+            switch (action.type.toUpperCase()) {
 
                 /**
                  * 지정된 url에 접속한다.
