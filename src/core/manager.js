@@ -1,9 +1,8 @@
 import '../conf';
-import EventEmitter from 'events';
 import logger from 'winston';
 import log from '../conf/logger';
 import redis from '../conf/redis';
-const event = new EventEmitter();
+import event from './event';
 const wdio = require('webdriverio');
 import Action from './action';
 
@@ -22,93 +21,92 @@ const logTransactions = (event, transaction, live, queue) => {
         queue,
     };
 
-    if (transaction) {
-        logObject['actions'] = transaction.actions;
+    if (transaction.transaction) {
+        logObject['actions'] = transaction.transaction.actions;
     }
 
     logger.log('info', logObject);
 };
 
+// singleton class
+let instance = null;
+
 export default class Manager {
 
-    constructor(_agent) {
-        this.agent = _agent;
-        this.redisKey = this.agent && this.agent._id ? `agent-${this.agent._id}` : `agent`;
-
-        /**
-         * 트랜잭션을 최대 몇 개까지 동시에 실행 할 것인지.
-         * @type {*}
-         */
-        this.maxSession = this.agent && this.agent.max_session ? this.agent.max_session : 1;
-
-        /**
-         * 실행중인 트랜잭션 수
-         * @type {number}
-         */
-        this.liveSession = 0;
-
-        /**
-         * 트랜잭션 대기 큐
-         * @type {Array}
-         */
-        this.transactionQueue = [];
+    constructor() {
+        if (!instance) {
+            instance = this;
+            this.eventListenerBinded = false;
+        }
 
         /**
          * 이벤트 리스너 바인딩
          */
-        this.bindEventListener();
+        instance.bindEventListener();
 
-
+        return instance;
     }
-
-    /**
-     * 변수들을 Redis에 stringify object로 저장한다.
-     * key는 agent-{agentId}이다.
-     */
-    saveVariables() {
-        redis.set(this.redisKey, JSON.stringify({
-            transactionQueue: this.transactionQueue,
-            liveSession: this.liveSession
-        }));
-    };
-
-    /**
-     * Redis에 key로 저장되어 있는 변수들을 로컬로 가져온다.
-     * @returns {Promise}
-     */
-    loadVariables() {
-        return new Promise((resolve, reject) => {
-            redis.get(this.redisKey, (err, value) => {
-                if (err) reject(err);
-                const variables = JSON.parse(value);
-                this.transactionQueue = variables.transactionQueue;
-                this.liveSession = variables.liveSession;
-                resolve();
-            });
-        });
-    };
 
     /**
      * 이벤트 리스너들을 등록하는 메소드
      */
     bindEventListener() {
-        event.on('add', (transaction, browser) => {
-            logTransactions('TRANSACTION_ADD', transaction, this.liveSession, this.transactionQueue.length);
-            if (this.liveSession < this.maxSession) {
-                this.runTransaction(browser);
-            }
+        if (this.eventListenerBinded === false) {
+            event.on('add', async (transaction, agent) => {
+                const redisKey = agent && agent._id ? `agent-${agent._id}` : `agent`;
+                const store = await this.load(redisKey);
+                logTransactions('TRANSACTION_ADD', transaction, store.liveSession, store.transactionQueue.length);
+                if (store.liveSession < agent.max_session) {
+                    await this.runTransaction(agent);
+                }
+            });
 
+            event.on('start', async (transaction, agent) => {
+                const redisKey = agent && agent._id ? `agent-${agent._id}` : `agent`;
+                const store = await this.load(redisKey);
+                logTransactions('TRANSACTION_START', transaction, store.liveSession, store.transactionQueue.length);
+            });
+
+            event.on('finish', async (transaction, agent) => {
+                const redisKey = agent && agent._id ? `agent-${agent._id}` : `agent`;
+                const store = await this.load(redisKey);
+                logTransactions('TRANSACTION_FINISH', transaction, store.liveSession, store.transactionQueue.length);
+                if (store.liveSession < agent.max_session) {
+                    await this.runTransaction(agent);
+                }
+            });
+            instance.event = event;
+            this.eventListenerBinded = true;
+        }
+    }
+
+    load(key) {
+        return new Promise((resolve, reject) => {
+            redis.get(key, (err, value) => {
+                if (err) reject(err);
+                const variables = JSON.parse(value) || {};
+                const transactionQueue = variables.transactionQueue || [];
+                const liveSession = variables.liveSession || 0;
+                resolve({
+                    transactionQueue,
+                    liveSession
+                });
+            });
         });
+    }
 
-        event.on('start', (transaction, browser) => {
-            logTransactions('TRANSACTION_START', transaction, this.liveSession, this.transactionQueue.length);
-        });
-
-        event.on('finish', (transaction, browser) => {
-            logTransactions('TRANSACTION_FINISH', transaction, this.liveSession, this.transactionQueue.length);
-            if (this.liveSession < this.maxSession) {
-                this.runTransaction(browser);
-            }
+    save(key, transactionQueue = [], liveSession = 0) {
+        return new Promise((resolve, reject) => {
+            redis.set(key, JSON.stringify({
+                transactionQueue,
+                liveSession
+            }), (err) => {
+                if (err) reject(err);
+                resolve({
+                    transactionQueue,
+                    liveSession
+                });
+            });
         });
     }
 
@@ -116,43 +114,47 @@ export default class Manager {
      * 트랜잭션을 대기 큐에 추가하는 메소드.
      * 트랜잭션을 큐에 추가 하는 순간 'add' 이벤트가 발생.
      * @param transaction
+     * @param agent
      * @param browser
      */
-    addTransaction(transaction, browser) {
-        if (transaction) {
-            this.transactionQueue.push(transaction);
-            this.saveVariables();
-            event.emit('add', transaction, browser);
-        }
+    async enqueueTransaction(transaction, agent, browser) {
+        const redisKey = agent && agent._id ? `agent-${agent._id}` : `agent`;
+        const store = await this.load(redisKey);
+        store.transactionQueue.push({
+            transaction,
+            browser
+        });
+        await this.save(redisKey, store.transactionQueue, store.liveSession);
+        event.emit('add', transaction, agent);
+        await new Promise((r) => { setTimeout(() => { r(); }, 100)} );
     }
 
     /**
      * 큐에서 트랜잭션을 하나 꺼내서 시작한다.
      * 시작시 'start' 이벤트 발생, 완료시 'finish' 이벤트 발생.
+     * @param agent
      * @param browser
      */
-    async runTransaction(browser) {
-        await this.loadVariables();
-        if (this.transactionQueue.length > 0) {
-            if (this.liveSession < this.maxSession) {
-                const transaction = this.transactionQueue.shift();
-                this.liveSession++;
-                this.saveVariables();
-                event.emit('start', transaction, browser);
-
-                this.requestToSelenium(this.agent, transaction, browser).then(() => {
-                    this.liveSession--;
-                    this.saveVariables();
-                    event.emit('finish', transaction, browser);
-                }).catch(err => {
-                    // transaction.run 에서 로깅함
-                });
+    async runTransaction(agent) {
+        const redisKey = agent && agent._id ? `agent-${agent._id}` : `agent`;
+        const store = await this.load(redisKey);
+        if (store.transactionQueue.length > 0) {
+            if (store.liveSession < agent.max_session) {
+                const transaction = store.transactionQueue.shift();
+                store.liveSession++;
+                await this.save(redisKey, store.transactionQueue, store.liveSession);
+                event.emit('start', transaction, agent);
+                await this.requestToSelenium(transaction.transaction, agent, transaction.browser);
+                const store_temp = await this.load(redisKey);
+                store_temp.liveSession--;
+                await this.save(redisKey, store_temp.transactionQueue, store_temp.liveSession);
+                event.emit('finish', transaction, agent);
 
             } else {
-                log('TRANSACTION_QUEUE_FULL', null, this.liveSession, this.transactionQueue.length);
+                log('TRANSACTION_QUEUE_FULL', null, store.liveSession, store.transactionQueue.length);
             }
         } else {
-            log('TRANSACTION_QUEUE_EMPTY', null, this.liveSession, this.transactionQueue.length);
+            log('TRANSACTION_QUEUE_EMPTY', null, store.liveSession, store.transactionQueue.length);
         }
     }
 
@@ -164,7 +166,7 @@ export default class Manager {
      * @param browserType
      * @returns {Promise}
      */
-    requestToSelenium(agent, transaction, browserType) {
+    requestToSelenium(transaction, agent, browserType) {
         return new Promise((resolve, reject) => {
             if (!agent) {
                 log('error', 'TRANSACTION_RUNTIME_ERROR', 'Agent is undefined. You must pass an Agent object as an argument when calling the Manager constructor.');
