@@ -13,7 +13,7 @@ const client = redis.createClient({
 });
 
 client.flushdb( function (err, succeeded) {
-    console.log(succeeded); // will be true if successfull
+    console.log('[REDIS] Flush'); // will be true if successfull
 });
 
 client.on('ready', () => {

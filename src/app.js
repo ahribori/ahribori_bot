@@ -11,6 +11,7 @@ import path from 'path';
 import fs from 'fs';
 import figlet from 'figlet';
 import api from './api';
+import scheduleManager from './core/schedule';
 
 /* =========================================
  Express Configuration
@@ -56,5 +57,6 @@ mongoose.Promise = global.Promise;
 db.on('error', console.error);
 db.once('open', () => {
     console.log('connected to mongodb server =>', MONGO_URI);
+    new scheduleManager();
 });
 

@@ -1,9 +1,8 @@
 import '../conf';
-import EventEmitter from 'events';
 import logger from 'winston';
 import log from '../conf/logger';
 import redis from '../conf/redis';
-const event = new EventEmitter();
+import event from './event';
 const wdio = require('webdriverio');
 import Action from './action';
 
@@ -76,6 +75,7 @@ export default class Manager {
                     await this.runTransaction(agent);
                 }
             });
+            instance.event = event;
             this.eventListenerBinded = true;
         }
     }

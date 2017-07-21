@@ -2,6 +2,7 @@ import express from 'express';
 const router = express.Router();
 import { Schedule } from '../model';
 import onError from './onError';
+import event from '../core/event';
 
 router.get('/', async (req, res) => {
     try {
@@ -39,7 +40,7 @@ router.post('/', async (req, res) => {
     }
 
     try {
-        res.json(await Schedule({
+        const schedule = await Schedule({
             agent,
             transaction,
             browser,
@@ -48,7 +49,9 @@ router.post('/', async (req, res) => {
             date,
             cron,
             interval
-        }).save());
+        }).save();
+        res.json(schedule);
+        event.emit('addSchedule', schedule);
     } catch (e) {
         return onError(res, e);
     }
@@ -93,7 +96,9 @@ router.put('/:id', async (req, res) => {
     willUpdate['mod_date'] = Date.now();
 
     try {
-        res.json(await Schedule.update({ _id: req.params.id }, willUpdate));
+        const schedule = await Schedule.update({ _id: req.params.id }, willUpdate);
+        res.json(schedule);
+        event.emit('updateSchedule', schedule);
     } catch (e) {
         return onError(res, e);
     }
@@ -101,7 +106,14 @@ router.put('/:id', async (req, res) => {
 
 router.delete('/:id', async (req, res) => {
     try {
-        res.json(await Schedule.remove({ _id: req.params.id }));
+        const schedule = await Schedule.findOne({ _id: req.params.id });
+        if (schedule) {
+            const remove = await schedule.remove();
+            event.emit('removeSchedule', remove);
+            res.json(remove);
+        } else {
+            res.send(`${req.params.id} schedule not exist`);
+        }
     } catch (e) {
         return onError(res, e);
     }

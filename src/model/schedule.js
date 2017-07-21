@@ -9,6 +9,7 @@ const Schedule = new Schema({
     repeat: { type: Number, default: false },
     date: { type: Date, default: Date.now },
     cron: { type: String },
+    count: { type: Number, default: 0 },
     interval: { type: Number, default: 0 },
     reg_date: { type: Date, default: Date.now },
     mod_date: { type: Date, default: Date.now }
