@@ -12,6 +12,10 @@ const client = redis.createClient({
     url: REDIS_URL,
 });
 
+client.flushdb( function (err, succeeded) {
+    console.log(succeeded); // will be true if successfull
+});
+
 client.on('ready', () => {
     log('info', 'REDIS_READY', `Redis connection established : ${REDIS_HOST}:${REDIS_PORT}`);
 });
