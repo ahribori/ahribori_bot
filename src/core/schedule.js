@@ -36,6 +36,7 @@ const initialize = async ({ schedule, agent, transaction }) => {
             });
             if (job) {
                 instance.scheduleTable[schedule._id] = job;
+                log('info', 'SCHEDULE_ADD', schedule._id);
             }
             break;
         case 'cron':
@@ -83,7 +84,7 @@ event.on('removeSchedule', (schedule) => {
     if (job) {
         job.cancel();
         delete instance.scheduleTable[schedule._id];
-        log('info', 'SCHEDULE_ADD', schedule._id );
+        log('info', 'SCHEDULE_REMOVE', schedule._id );
     }
 });
 
