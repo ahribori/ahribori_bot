@@ -48,9 +48,9 @@ export const GET_VALUE = 'GET_VALUE';
 export const NAVIGATE = 'NAVIGATE';
 export const REFRESH = 'REFRESH';
 
-    /*
-        STATE
-     */
+/*
+    STATE
+ */
 
 /*
     UTILITY
