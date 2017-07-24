@@ -13,9 +13,14 @@ const seleniumOptions = {
 const browser = wdio.remote(seleniumOptions);
 
 (async function () {
-    await browser.init();
+    try {
+        await browser.init();
 
-    // TEST API
+        // TEST API
 
-    await browser.end();
+        await browser.end();
+    } catch (e) {
+        console.log(e);
+        await browser.end();
+    }
 }());
