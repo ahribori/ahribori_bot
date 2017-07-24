@@ -27,9 +27,9 @@ export default class Action {
         }
     }
 
-    static wait(milliseconds) {
+    static pause(milliseconds) {
         return {
-            type: actionTypes.WAIT,
+            type: actionTypes.PAUSE,
             milliseconds
         }
     }
@@ -55,69 +55,80 @@ export default class Action {
      * @returns {Promise.<void>}
      */
     static async runAction(action, browser) {
-        await (async function (browser) {
-            switch (action.type.toUpperCase()) {
+        try {
+            const result = await (async function (browser) {
 
                 /**
-                 * 지정된 url에 접속한다.
-                 *
-                 * param1: url
+                 * Report를 남기고 싶은 데이터는 return 해주면 됨
                  */
-                case actionTypes.NAVIGATE:
-                    await browser.url(action.url);
-                    break;
+                switch (action.type.toUpperCase()) {
+                    /**
+                     * 지정된 url에 접속한다.
+                     *
+                     * param1: url
+                     */
+                    case actionTypes.NAVIGATE:
+                        await browser.url(action.url);
+                        break;
 
-                /**
-                 * selector로 DOM을 탐색하여 value를 삽입한다.
-                 *
-                 * param1: selector
-                 * param2: value
-                 */
-                case actionTypes.SET_VALUE:
-                    await browser.setValue(action.selector, action.value);
-                    break;
+                    /**
+                     * selector로 DOM을 탐색하여 value를 삽입한다.
+                     *
+                     * param1: selector
+                     * param2: value
+                     */
+                    case actionTypes.SET_VALUE:
+                        await browser.setValue(action.selector, action.value);
+                        break;
 
-                /**
-                 * selector로 DOM을 탐색하여 클릭한다.
-                 *
-                 * param1: selector
-                 */
-                case actionTypes.CLICK:
-                    await browser.click(action.selector);
-                    break;
+                    /**
+                     * selector로 DOM을 탐색하여 클릭한다.
+                     *
+                     * param1: selector
+                     */
+                    case actionTypes.CLICK:
+                        await browser.click(action.selector);
+                        break;
 
-                /**
-                 * param1(ms) 동안 wait한다.
-                 *
-                 * param1: ms
-                 */
-                case actionTypes.WAIT:
-                    await new Promise(r => {
-                        setTimeout(() => {
-                            r();
-                        }, action.milliseconds);
-                    });
-                    break;
+                    /**
+                     * param1(ms) 동안 wait한다.
+                     *
+                     * param1: ms
+                     */
+                    case actionTypes.PAUSE:
+                        await browser.pause(action.milliseconds);
+                        break;
 
-                case actionTypes.SCREENSHOT:
-                    await browser.saveScreenshot(path.resolve(appPath.SCREENSHOT_PATH, `${Date.now()}.png`));
-                    break;
+                    case actionTypes.SCREENSHOT:
+                        await browser.saveScreenshot(path.resolve(appPath.SCREENSHOT_PATH, `${Date.now()}.png`));
+                        break;
 
-                /**
-                 *  action.type이 function이면,
-                 *  브라우저 객체를 인자로 넘겨,
-                 *  외부에서 직접 browser 객체를 핸들링 할 수 있음.
-                 */
-                default:
-                    if (action.type === actionTypes.CUSTOM && typeof action.callback === 'function') {
-                        try {
-                            await callback(browser);
-                        } catch (e) {
-                            throw e;
+                    /**
+                     *  action.type이 function이면,
+                     *  브라우저 객체를 인자로 넘겨,
+                     *  외부에서 직접 browser 객체를 핸들링 할 수 있음.
+                     */
+                    default:
+                        if (action.type === actionTypes.CUSTOM && typeof action.callback === 'function') {
+                            try {
+                                await callback(browser);
+                            } catch (e) {
+                                throw e;
+                            }
                         }
-                    }
+                }
+            }(browser));
+
+            if (result) {
+                return {
+                    action,
+                    result
+                };
             }
-        }(browser));
+
+        } catch (e) {
+            throw e;
+        }
     }
 
 }

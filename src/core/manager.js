@@ -5,6 +5,7 @@ import event from './event';
 const wdio = require('webdriverio');
 import Action from './action';
 
+
 /**
  * 트랜잭션 관련 이벤트 로깅 메소드
  * @param event
@@ -51,6 +52,7 @@ export default class Manager {
      * 이벤트 리스너들을 등록하는 메소드
      */
     bindEventListener() {
+
         if (this.eventListenerBinded === false) {
             event.on('add', (transaction, agent) => {
                 logTransactions('TRANSACTION_ADD', transaction, this.liveSession, this.transactionQueue.length);
@@ -81,7 +83,7 @@ export default class Manager {
      * @param agent
      * @param browser
      */
-    enqueueTransaction(transaction, agent, browser) {
+    async enqueueTransaction(transaction, agent, browser) {
         this.transactionQueue.push({
             transaction,
             browser
@@ -101,7 +103,23 @@ export default class Manager {
                 const transaction = this.transactionQueue.shift();
                 this.liveSession++;
                 event.emit('start', transaction, agent);
-                await this.requestToSelenium(transaction.transaction, agent, transaction.browser);
+
+                let result = {};
+
+                try {
+                    const results = await this.requestToSelenium(transaction.transaction, agent, transaction.browser);
+                    result.success = true;
+                    // 전체 성공
+                    if (results.length > 0) {
+                        result.results = results;
+                    }
+                } catch (e) {
+                    result.success = false;
+                    result.error = e;
+                    log('error', 'SELENIUM_ERROR', e.message);
+                }
+                console.log(result);
+
                 this.liveSession--;
                 event.emit('finish', transaction, agent);
 
@@ -154,17 +172,20 @@ export default class Manager {
 
                     //------------- Action start -------------
 
+                    const results = [];
                     for (let i = 0; i < transaction.actions.length; i++) {
-                        await Action.runAction(transaction.actions[i], browser);
+                        const result = await Action.runAction(transaction.actions[i], browser);
+                        if (result) {
+                            results.push(result);
+                        }
                     }
 
                     //------------- Action end ---------------
 
                     await browser.end();
-                    resolve();
+                    resolve(results);
                 } catch (e) {
                     await browser.end();
-                    log('error', 'SELENIUM_ERROR', e.message);
                     reject(e);
                 }
             }(browser));
