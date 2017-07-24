@@ -26,13 +26,13 @@ const initialize = async ({ schedule, agent, transaction }) => {
     switch (schedule.type) {
         case 'now':
             if (schedule.count === 0) {
-                manager.enqueueTransaction(transaction, agent, schedule.browser);
+                manager.enqueueTransaction(transaction, agent, schedule.browser, schedule._id);
                 await Schedule.update({ _id: schedule._id }, { count: ++schedule.count });
             }
             break;
         case 'date':
             const job = nodeScheduler.scheduleJob(schedule.date, () => {
-                manager.enqueueTransaction(transaction, agent, schedule.browser);
+                manager.enqueueTransaction(transaction, agent, schedule.browser, schedule._id);
             });
             if (job) {
                 instance.scheduleTable[schedule._id] = job;
@@ -49,13 +49,13 @@ const applySchedulesAfterInitialized = async ({ schedule, agent, transaction }) 
     switch (schedule.type) {
         case 'now':
             if (schedule.count === 0) {
-                manager.enqueueTransaction(transaction, agent, schedule.browser);
+                manager.enqueueTransaction(transaction, agent, schedule.browser, schedule._id);
                 await Schedule.update({ _id: schedule._id }, { count: ++ schedule.count });
             }
             break;
         case 'date':
             const job = nodeScheduler.scheduleJob(schedule.date, () => {
-                manager.enqueueTransaction(transaction, agent, schedule.browser);
+                manager.enqueueTransaction(transaction, agent, schedule.browser, schedule._id);
             });
             if (job) {
                 instance.scheduleTable[schedule._id] = job;

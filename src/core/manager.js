@@ -4,7 +4,7 @@ import log from '../conf/logger';
 import event from './event';
 const wdio = require('webdriverio');
 import Action from './action';
-
+import { Result } from '../model';
 
 /**
  * 트랜잭션 관련 이벤트 로깅 메소드
@@ -82,11 +82,13 @@ export default class Manager {
      * @param transaction
      * @param agent
      * @param browser
+     * @param schedule_id
      */
-    async enqueueTransaction(transaction, agent, browser) {
+    async enqueueTransaction(transaction, agent, browser, schedule_id) {
         this.transactionQueue.push({
             transaction,
-            browser
+            browser,
+            schedule_id
         });
         event.emit('add', transaction, agent);
     }
@@ -113,12 +115,13 @@ export default class Manager {
                     if (results.length > 0) {
                         result.results = results;
                     }
+                    this.report(agent, transaction, result);
                 } catch (e) {
                     result.success = false;
                     result.error = e;
+                    this.report(agent, transaction, result);
                     log('error', 'SELENIUM_ERROR', e.message);
                 }
-                console.log(result);
 
                 this.liveSession--;
                 event.emit('finish', transaction, agent);
@@ -192,5 +195,24 @@ export default class Manager {
         });
     }
 
+    report(agent, transaction, result) {
+        const ObjectId = require('mongoose').Types.ObjectId;
+        const willSave = {
+            agent: ObjectId(agent._id),
+            transaction: ObjectId(transaction.transaction._id),
+            browser: transaction.browser,
+            success: result.success,
+        };
+        if (transaction.schedule_id) {
+            willSave['schedule_id'] = transaction.schedule_id;
+        }
+        if (result.results) {
+            willSave['results'] = result.results;
+        }
+        if (result.error) {
+            willSave['error'] =result.error;
+        }
+        new Result(willSave).save();
+    }
 }
 
