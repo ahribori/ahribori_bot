@@ -1,11 +1,9 @@
 import '../conf';
 import logger from 'winston';
 import log from '../conf/logger';
-import redis from '../conf/redis';
 import event from './event';
 const wdio = require('webdriverio');
 import Action from './action';
-
 
 /**
  * 트랜잭션 관련 이벤트 로깅 메소드
@@ -36,6 +34,8 @@ export default class Manager {
     constructor() {
         if (!instance) {
             instance = this;
+            this.transactionQueue = [];
+            this.liveSession = 0;
             this.eventListenerBinded = false;
         }
 
@@ -52,62 +52,26 @@ export default class Manager {
      */
     bindEventListener() {
         if (this.eventListenerBinded === false) {
-            event.on('add', async (transaction, agent) => {
-                const redisKey = agent && agent._id ? `agent-${agent._id}` : `agent`;
-                const store = await this.load(redisKey);
-                logTransactions('TRANSACTION_ADD', transaction, store.liveSession, store.transactionQueue.length);
-                if (store.liveSession < agent.max_session) {
-                    await this.runTransaction(agent);
+            event.on('add', (transaction, agent) => {
+                logTransactions('TRANSACTION_ADD', transaction, this.liveSession, this.transactionQueue.length);
+                if (this.liveSession < agent.max_session) {
+                    this.runTransaction(agent);
                 }
             });
 
-            event.on('start', async (transaction, agent) => {
-                const redisKey = agent && agent._id ? `agent-${agent._id}` : `agent`;
-                const store = await this.load(redisKey);
-                logTransactions('TRANSACTION_START', transaction, store.liveSession, store.transactionQueue.length);
+            event.on('start', (transaction, agent) => {
+                logTransactions('TRANSACTION_START', transaction, this.liveSession, this.transactionQueue.length);
             });
 
-            event.on('finish', async (transaction, agent) => {
-                const redisKey = agent && agent._id ? `agent-${agent._id}` : `agent`;
-                const store = await this.load(redisKey);
-                logTransactions('TRANSACTION_FINISH', transaction, store.liveSession, store.transactionQueue.length);
-                if (store.liveSession < agent.max_session) {
-                    await this.runTransaction(agent);
+            event.on('finish', (transaction, agent) => {
+                logTransactions('TRANSACTION_FINISH', transaction, this.liveSession, this.transactionQueue.length);
+                if (this.liveSession < agent.max_session) {
+                    this.runTransaction(agent);
                 }
             });
             instance.event = event;
             this.eventListenerBinded = true;
         }
-    }
-
-    load(key) {
-        return new Promise((resolve, reject) => {
-            redis.get(key, (err, value) => {
-                if (err) reject(err);
-                const variables = JSON.parse(value) || {};
-                const transactionQueue = variables.transactionQueue || [];
-                const liveSession = variables.liveSession || 0;
-                resolve({
-                    transactionQueue,
-                    liveSession
-                });
-            });
-        });
-    }
-
-    save(key, transactionQueue = [], liveSession = 0) {
-        return new Promise((resolve, reject) => {
-            redis.set(key, JSON.stringify({
-                transactionQueue,
-                liveSession
-            }), (err) => {
-                if (err) reject(err);
-                resolve({
-                    transactionQueue,
-                    liveSession
-                });
-            });
-        });
     }
 
     /**
@@ -117,16 +81,12 @@ export default class Manager {
      * @param agent
      * @param browser
      */
-    async enqueueTransaction(transaction, agent, browser) {
-        const redisKey = agent && agent._id ? `agent-${agent._id}` : `agent`;
-        const store = await this.load(redisKey);
-        store.transactionQueue.push({
+    enqueueTransaction(transaction, agent, browser) {
+        this.transactionQueue.push({
             transaction,
             browser
         });
-        await this.save(redisKey, store.transactionQueue, store.liveSession);
         event.emit('add', transaction, agent);
-        await new Promise((r) => { setTimeout(() => { r(); }, 100)} );
     }
 
     /**
@@ -136,25 +96,20 @@ export default class Manager {
      * @param browser
      */
     async runTransaction(agent) {
-        const redisKey = agent && agent._id ? `agent-${agent._id}` : `agent`;
-        const store = await this.load(redisKey);
-        if (store.transactionQueue.length > 0) {
-            if (store.liveSession < agent.max_session) {
-                const transaction = store.transactionQueue.shift();
-                store.liveSession++;
-                await this.save(redisKey, store.transactionQueue, store.liveSession);
+        if (this.transactionQueue.length > 0) {
+            if (this.liveSession < agent.max_session) {
+                const transaction = this.transactionQueue.shift();
+                this.liveSession++;
                 event.emit('start', transaction, agent);
                 await this.requestToSelenium(transaction.transaction, agent, transaction.browser);
-                const store_temp = await this.load(redisKey);
-                store_temp.liveSession--;
-                await this.save(redisKey, store_temp.transactionQueue, store_temp.liveSession);
+                this.liveSession--;
                 event.emit('finish', transaction, agent);
 
             } else {
-                log('TRANSACTION_QUEUE_FULL', null, store.liveSession, store.transactionQueue.length);
+                log('TRANSACTION_QUEUE_FULL', null, this.liveSession, this.transactionQueue.length);
             }
         } else {
-            log('TRANSACTION_QUEUE_EMPTY', null, store.liveSession, store.transactionQueue.length);
+            log('TRANSACTION_QUEUE_EMPTY', null, this.liveSession, this.transactionQueue.length);
         }
     }
 
