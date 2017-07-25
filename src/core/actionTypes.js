@@ -47,6 +47,7 @@ export const GET_VALUE = 'GET_VALUE';
  */
 export const NAVIGATE = 'NAVIGATE';
 export const REFRESH = 'REFRESH';
+export const FRAME = 'FRAME';
 
 /*
     STATE
@@ -65,6 +66,5 @@ export const SCREENSHOT = 'SCREENSHOT';
 /*
     ETC
  */
-export const WAIT = 'WAIT';
 export const CUSTOM = 'CUSTOM';
 
