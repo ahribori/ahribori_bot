@@ -1,29 +1,26 @@
-import Manager from '../core/manager';
-const manager = new Manager();
-import { Action, Transaction } from '../core'
+const wdio = require('webdriverio');
 
-const TEST_CASE_01 = new Transaction([
-    Action.navigate('http://naver.com'),
-    Action.navigate('http://daum.net'),
-    Action.navigate('https://google.co.kr'),
-]);
+const seleniumOptions = {
+    desiredCapabilities: {
+        browserName: 'chrome'
+    },
+    protocol: 'http',
+    host: '127.0.0.1',
+    port: 4444,
+    services: ['phantomjs']
+};
 
-const TEST_CASE_02 = new Transaction([
-    Action.navigate('http://naver.com'),
-    Action.screenshot(),
-    Action.navigate('http://daum.net'),
-    Action.screenshot(),
-    Action.navigate('https://google.co.kr'),
-    Action.screenshot(),
-]);
+const browser = wdio.remote(seleniumOptions);
 
-const TEST_CASE_03 = new Transaction([
-    Action.navigate('http://naver.com'),
-    Action.setValue('#query', 'ahribori'),
-    Action.click('#search_btn'),
-    Action.wait(3000)
-]);
+(async function () {
+    try {
+        await browser.init();
 
-// manager.addTransaction(TEST_CASE_01);
-// manager.addTransaction(TEST_CASE_02);
-// manager.addTransaction(TEST_CASE_03);
+        // TEST API
+
+        await browser.end();
+    } catch (e) {
+        console.log(e);
+        await browser.end();
+    }
+}());

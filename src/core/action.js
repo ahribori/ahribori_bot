@@ -27,9 +27,9 @@ export default class Action {
         }
     }
 
-    static wait(milliseconds) {
+    static pause(milliseconds) {
         return {
-            type: actionTypes.WAIT,
+            type: actionTypes.PAUSE,
             milliseconds
         }
     }
@@ -55,69 +55,82 @@ export default class Action {
      * @returns {Promise.<void>}
      */
     static async runAction(action, browser) {
-        await (async function (browser) {
-            switch (action.type.toUpperCase()) {
-
-                /**
-                 * 지정된 url에 접속한다.
-                 *
-                 * param1: url
-                 */
-                case actionTypes.NAVIGATE:
-                    await browser.url(action.url);
-                    break;
-
-                /**
-                 * selector로 DOM을 탐색하여 value를 삽입한다.
-                 *
-                 * param1: selector
-                 * param2: value
-                 */
-                case actionTypes.SET_VALUE:
-                    await browser.setValue(action.selector, action.value);
-                    break;
-
-                /**
-                 * selector로 DOM을 탐색하여 클릭한다.
-                 *
-                 * param1: selector
-                 */
-                case actionTypes.CLICK:
-                    await browser.click(action.selector);
-                    break;
-
-                /**
-                 * param1(ms) 동안 wait한다.
-                 *
-                 * param1: ms
-                 */
-                case actionTypes.WAIT:
-                    await new Promise(r => {
-                        setTimeout(() => {
-                            r();
-                        }, action.milliseconds);
-                    });
-                    break;
-
-                case actionTypes.SCREENSHOT:
-                    await browser.saveScreenshot(path.resolve(appPath.SCREENSHOT_PATH, `${Date.now()}.png`));
-                    break;
-
-                /**
-                 *  action.type이 function이면,
-                 *  브라우저 객체를 인자로 넘겨,
-                 *  외부에서 직접 browser 객체를 핸들링 할 수 있음.
-                 */
-                default:
-                    if (action.type === actionTypes.CUSTOM && typeof action.callback === 'function') {
-                        try {
-                            await callback(browser);
-                        } catch (e) {
-                            throw e;
+        try {
+            const result = await (async function (browser) {
+                switch (action.type.toUpperCase()) {
+                    case actionTypes.NAVIGATE:
+                        await browser.url(action.url);
+                        break;
+                    case actionTypes.SET_VALUE:
+                        await browser.setValue(action.selector, action.value);
+                        break;
+                    case actionTypes.GET_ATTRIBUTE:
+                        return await browser.getAttribute(action.selector, action.attributeName);
+                        break;
+                    case actionTypes.GET_CSS_PROPERTY:
+                        return await browser.getCssProperty(action.selector, action.cssProperty);
+                        break;
+                    case actionTypes.GET_ELEMENT_SIZE:
+                        return await browser.getElementSize(action.selector, action.prop);
+                        break;
+                    case actionTypes.GET_HTML:
+                        return await browser.getHTML(action.selector, action.includeSelectorTag || undefined);
+                        break;
+                    case actionTypes.GET_LOCATION:
+                        return await browser.getLocation(action.selector, action.property);
+                        break;
+                    case actionTypes.GET_SOURCE:
+                        return await browser.getSource();
+                        break;
+                    case actionTypes.GET_TAG_NAME:
+                        return await browser.getTagName(action.selector);
+                        break;
+                    case actionTypes.GET_TEXT:
+                        return await browser.getText(action.selector);
+                        break;
+                    case actionTypes.GET_TITLE:
+                        return await browser.getTitle();
+                        break;
+                    case actionTypes.GET_URL:
+                        return await browser.getUrl();
+                        break;
+                    case actionTypes.GET_VALUE:
+                        return await browser.getValue(selector);
+                        break;
+                    case actionTypes.FRAME:
+                        const frame = await browser.$(action.selector);
+                        await browser.frame(frame.value);
+                        break;
+                    case actionTypes.CLICK:
+                        await browser.click(action.selector);
+                        break;
+                    case actionTypes.PAUSE:
+                        await browser.pause(action.milliseconds);
+                        break;
+                    case actionTypes.SCREENSHOT:
+                        await browser.saveScreenshot(path.resolve(appPath.SCREENSHOT_PATH, `${Date.now()}.png`));
+                        break;
+                    default:
+                        if (action.type === actionTypes.CUSTOM && typeof action.callback === 'function') {
+                            try {
+                                await callback(browser);
+                            } catch (e) {
+                                throw e;
+                            }
                         }
-                    }
+                }
+            }(browser));
+
+            if (result) {
+                return {
+                    action,
+                    result
+                };
             }
-        }(browser));
+
+        } catch (e) {
+            throw e;
+        }
     }
 
 }
