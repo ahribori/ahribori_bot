@@ -31,7 +31,7 @@ app.use(morgan('dev'));
 // open the server
 app.listen(port, () => {
     figlet('Ahribori Bot', (err, logo) => {
-        console.log(logo);
+        // console.log(logo);
         console.log(`Listening on port ${port}...`);
     })
 });
