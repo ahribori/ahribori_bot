@@ -58,12 +58,23 @@ export default class Action {
         try {
             const result = await (async function (browser) {
                 switch (action.type.toUpperCase()) {
-                    case actionTypes.NAVIGATE:
-                        await browser.url(action.url);
+                    /**
+                     * ACTION
+                     */
+                    case actionTypes.CLICK:
+                        await browser.click(action.selector);
                         break;
                     case actionTypes.SET_VALUE:
                         await browser.setValue(action.selector, action.value);
                         break;
+
+                    /**
+                     * COOKIE
+                     */
+
+                    /**
+                     * PROPERTY
+                     */
                     case actionTypes.GET_ATTRIBUTE:
                         return await browser.getAttribute(action.selector, action.attributeName);
                         break;
@@ -97,19 +108,43 @@ export default class Action {
                     case actionTypes.GET_VALUE:
                         return await browser.getValue(selector);
                         break;
+
+                    /**
+                     * PROTOCOL
+                     */
+                    case actionTypes.ALERT_ACCEPT:
+                        await browser.alertAccept();
+                        break;
+                    case actionTypes.ALERT_DISMISS:
+                        await browser.alertDismiss();
+                    case actionTypes.ALERT_TEXT:
+                        return await browser.alertText(action.text);
+                    case actionTypes.NAVIGATE:
+                        await browser.url(action.url);
+                        break;
                     case actionTypes.FRAME:
                         const frame = await browser.$(action.selector);
                         await browser.frame(frame.value);
                         break;
-                    case actionTypes.CLICK:
-                        await browser.click(action.selector);
-                        break;
+
+                    /**
+                     * STATE
+                     */
+
+                    /**
+                     * UTILITY
+                     */
                     case actionTypes.PAUSE:
                         await browser.pause(action.milliseconds);
                         break;
                     case actionTypes.SCREENSHOT:
                         await browser.saveScreenshot(path.resolve(appPath.SCREENSHOT_PATH, `${Date.now()}.png`));
                         break;
+
+                    /**
+                     * WINDOW
+                     */
+
                     default:
                         if (action.type === actionTypes.CUSTOM && typeof action.callback === 'function') {
                             try {
