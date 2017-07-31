@@ -69,5 +69,6 @@ export const SCREENSHOT = 'SCREENSHOT';
 /*
     ETC
  */
+export const DOWNLOAD = 'DOWNLOAD';
 export const CUSTOM = 'CUSTOM';
 

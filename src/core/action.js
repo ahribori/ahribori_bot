@@ -1,7 +1,9 @@
 import '../conf';
+import log from '../conf/logger';
 import appPath from '../conf/path';
 import path from 'path';
 import * as actionTypes from './actionTypes';
+import download from 'download';
 
 export default class Action {
 
@@ -150,6 +152,31 @@ export default class Action {
                      * WINDOW
                      */
 
+                    /**
+                     * ETC
+                     */
+                    case actionTypes.DOWNLOAD:
+                        const src = await browser.elements(action.selector).getAttribute('src');
+                        const href = await browser.elements(action.selector).getAttribute('href');
+                        if (src) {
+                            if (Array.isArray(src)) {
+                                for (let i = 0; i < src.length; i ++) {
+                                    download(src[i], appPath.DOWNLOAD_PATH).catch(err => { log('error', 'DOWNLOAD_FAIL', err); });
+                                }
+                            } else {
+                                download(src, appPath.DOWNLOAD_PATH).catch(err => { log('error', 'DOWNLOAD_FAIL', err); });
+                            }
+                        }
+                        if (href) {
+                            if (Array.isArray(src)) {
+                                for (let i = 0; i < href.length; i ++) {
+                                    download(href[i], appPath.DOWNLOAD_PATH).catch(err => { log('error', 'DOWNLOAD_FAIL', err); });
+                                }
+                            } else {
+                                download(href, appPath.DOWNLOAD_PATH).catch(err => { log('error', 'DOWNLOAD_FAIL', err); });
+                            }
+                        }
+                        break;
                     default:
                         if (action.type === actionTypes.CUSTOM && typeof action.callback === 'function') {
                             try {
