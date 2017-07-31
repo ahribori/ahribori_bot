@@ -113,10 +113,15 @@ export default class Action {
                      * PROTOCOL
                      */
                     case actionTypes.ALERT_ACCEPT:
-                        await browser.alertAccept();
+                        if (await browser.alertText()) {
+                            await browser.alertAccept();
+                        }
                         break;
                     case actionTypes.ALERT_DISMISS:
-                        await browser.alertDismiss();
+                        if (await browser.alertText()) {
+                            await browser.alertDismiss();
+                        }
+                        break;
                     case actionTypes.ALERT_TEXT:
                         return await browser.alertText(action.text);
                     case actionTypes.NAVIGATE:
