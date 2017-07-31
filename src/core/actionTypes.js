@@ -45,6 +45,9 @@ export const GET_VALUE = 'GET_VALUE';
 /*
     PROTOCOL
  */
+export const ALERT_ACCEPT = 'ALERT_ACCEPT';
+export const ALERT_DISMISS = 'ALERT_DISMISS';
+export const ALERT_TEXT = 'ALERT_TEXT';
 export const NAVIGATE = 'NAVIGATE';
 export const REFRESH = 'REFRESH';
 export const FRAME = 'FRAME';
@@ -66,5 +69,6 @@ export const SCREENSHOT = 'SCREENSHOT';
 /*
     ETC
  */
+export const DOWNLOAD = 'DOWNLOAD';
 export const CUSTOM = 'CUSTOM';
 

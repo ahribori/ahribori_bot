@@ -23,6 +23,7 @@ const getSchedules = async (callback) => {
 
 // 초기화 스케쥴 등록
 const initialize = async ({ schedule, agent, transaction }) => {
+    let job = null;
     switch (schedule.type) {
         case 'now':
             if (schedule.count === 0) {
@@ -31,7 +32,7 @@ const initialize = async ({ schedule, agent, transaction }) => {
             }
             break;
         case 'date':
-            const job = nodeScheduler.scheduleJob(schedule.date, () => {
+            job = nodeScheduler.scheduleJob(schedule.date, () => {
                 manager.enqueueTransaction(transaction, agent, schedule.browser, schedule._id);
             });
             if (job) {
@@ -40,12 +41,20 @@ const initialize = async ({ schedule, agent, transaction }) => {
             }
             break;
         case 'cron':
+            job = nodeScheduler.scheduleJob(schedule.cron, () => {
+                manager.enqueueTransaction(transaction, agent, schedule.browser, schedule._id);
+            });
+            if (job) {
+                instance.scheduleTable[schedule._id] = job;
+                log('info', 'SCHEDULE_ADD', schedule._id);
+            }
             break;
     }
 };
 
 // 초기화 이후 스케쥴 등록
 const applySchedulesAfterInitialized = async ({ schedule, agent, transaction }) => {
+    let job = null;
     switch (schedule.type) {
         case 'now':
             if (schedule.count === 0) {
@@ -54,7 +63,7 @@ const applySchedulesAfterInitialized = async ({ schedule, agent, transaction }) 
             }
             break;
         case 'date':
-            const job = nodeScheduler.scheduleJob(schedule.date, () => {
+            job = nodeScheduler.scheduleJob(schedule.date, () => {
                 manager.enqueueTransaction(transaction, agent, schedule.browser, schedule._id);
             });
             if (job) {
@@ -63,7 +72,13 @@ const applySchedulesAfterInitialized = async ({ schedule, agent, transaction }) 
             }
             break;
         case 'cron':
-            break;
+            job = nodeScheduler.scheduleJob(schedule.cron, () => {
+                manager.enqueueTransaction(transaction, agent, schedule.browser, schedule._id);
+            });
+            if (job) {
+                instance.scheduleTable[schedule._id] = job;
+                log('info', 'SCHEDULE_ADD', schedule._id);
+            }
     }
 };
 

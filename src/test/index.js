@@ -1,4 +1,7 @@
+import '../conf'
+import appPath from '../conf/path';
 const wdio = require('webdriverio');
+import log from '../conf/logger';
 
 const seleniumOptions = {
     desiredCapabilities: {
